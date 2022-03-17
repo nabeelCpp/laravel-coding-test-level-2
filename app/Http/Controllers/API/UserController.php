@@ -15,6 +15,11 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function __construct(Request $request) {
+        if($request->username != 'Admin'){
+            return Response::deny('You must be an administrator to continue accessing users.');
+        }
+    }
     public function index()
     {
         $Users = User::all();
@@ -27,13 +32,24 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+    private function checkUserRole()
+    {
+        if(auth('api')->user()->role != 'Admin'){
+            return false;
+        }
+        return true;
+    }
     public function store(Request $request)
     {
+        if(!$this->checkUserRole()){
+            return Response::deny('You must be a Admin to continue using users.');
+        }
         $data = $request->all();
 
         $validator = Validator::make($data, [
             'username' => 'required',
             'password' => 'required|min:6',
+            'role' => 'required',
         ]);
 
         if($validator->fails()){
@@ -53,6 +69,9 @@ class UserController extends Controller
      */
     public function show(User $User)
     {
+        if(!$this->checkUserRole()){
+            return Response::deny('You must be a Admin to continue using users.');
+        }
         return response(['User' => new UserResource($User)]);
     }
 
@@ -65,6 +84,9 @@ class UserController extends Controller
      */
     public function update(Request $request, User $User)
     {
+        if(!$this->checkUserRole()){
+            return Response::deny('You must be a Admin to continue using users.');
+        }
         $data = $request->all();
 
         $validator = Validator::make($data, [
@@ -89,6 +111,9 @@ class UserController extends Controller
      */
     public function destroy(User $User)
     {
+        if(!$this->checkUserRole()){
+            return Response::deny('You must be a Admin to continue using users.');
+        }
         $User->delete();
 
         return response(['message' => 'User deleted successfully']);
